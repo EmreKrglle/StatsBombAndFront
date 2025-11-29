@@ -1,0 +1,104 @@
+/* src/App.css (Global Stil Dosyanız) */
+
+/* 1. Renk Paletiniz ve Değişkenleriniz (Tüm projede geçerli) */
+:root {
+    --primary-color: #282828e8;
+    --secondary-color: #4a6b5f;
+    --accent-color: #5a7d6f;
+    --success-color: #6b8e7d;
+    --background: #282828e8;
+    --home:#a61100;
+    --away:#002397;
+    --card-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --hover-shadow: 0 12px 48px rgba(0,0,0,0.12);
+}
+
+/* 2. Global Sıfırlama ve Body Stili */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: var(--primary-color);
+    
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding-bottom: 3rem;
+}
+
+/* 3. Global Navbar Stili (App.jsx'te kullanılır) */
+.navbar {
+    background: rgba(255,255,255,0.95) !important;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    text-decoration: none;
+}
+
+.navbar-brand {
+    color: var(--primary-color) !important;
+    font-weight: 700;
+    font-size: 1.5rem;
+    letter-spacing: -0.5px;
+}
+
+/* 4. Global Container Genişliği */
+.container {
+    max-width: 100%;
+}
+
+/* 5. Global Yükleniyor ve Hata Stilleri (Tüm bileşenler kullanır) */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 1.5rem;
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-text {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.error-card {
+    background: #e74c3c;
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(231,76,60,0.3);
+    margin: 2rem 0;
+    text-align: center;
+}
+
+/* 6. Paylaşılan Animasyonlar */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

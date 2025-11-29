@@ -4,6 +4,7 @@ import { useParams, Link as RouterLink } from "react-router-dom";
 import MatchStats from "./MatchStats";
 import FormationPitch from "./formationPitch";
 import DirectFreezeFrameController from "./DirectFreezeFrameController"; // YENİ - BASIT
+import PositionGroupedController from "./PositionGroupedController"; // YENİ - POZİSYON BAZLI
 import "../css/matchDetail.css";
 
 // StatBox bileşeni
@@ -42,6 +43,7 @@ function MatchDetail() {
   const [animatedPositions, setAnimatedPositions] = useState({});
   const [passArrows, setPassArrows] = useState([]);
   const [loadingSequences, setLoadingSequences] = useState(false);
+  const [usePositionGrouped, setUsePositionGrouped] = useState(true); // Yeni: Pozisyon bazlı kontrolcü kullan
 
   useEffect(() => {
     const fetchAllMatchData = async () => {
@@ -510,14 +512,69 @@ function MatchDetail() {
                 </button>
               </div>
 
-              {/* YENİ: Direct Freeze Frame Animation - TRANSFORM YOK */}
+              {/* YENİ: Freeze Frame Animation - Pozisyon bazlı veya direkt */}
               {showPassAnimation && buildUpRawData && (
                 <div style={{ marginBottom: '20px', position: 'relative' }}>
-                  <DirectFreezeFrameController
-                    apiData={buildUpRawData}
-                    onFrameUpdate={handleFrameUpdate}
-                    onPassDraw={handlePassDraw}
-                  />
+                  {/* Kontrol Seçici */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '10px',
+                    marginBottom: '15px',
+                    justifyContent: 'center'
+                  }}>
+                    <button
+                      onClick={() => setUsePositionGrouped(true)}
+                      style={{
+                        padding: '8px 16px',
+                        background: usePositionGrouped
+                          ? 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)'
+                          : 'rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        border: usePositionGrouped ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      🎯 Pozisyon Bazlı
+                    </button>
+                    <button
+                      onClick={() => setUsePositionGrouped(false)}
+                      style={{
+                        padding: '8px 16px',
+                        background: !usePositionGrouped
+                          ? 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)'
+                          : 'rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        border: !usePositionGrouped ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s'
+                      }}
+                    >
+                      ⚡ Tüm Passlar
+                    </button>
+                  </div>
+
+                  {/* Seçilen Kontrolcü */}
+                  {usePositionGrouped ? (
+                    <PositionGroupedController
+                      apiData={buildUpRawData}
+                      onFrameUpdate={handleFrameUpdate}
+                      onPassDraw={handlePassDraw}
+                    />
+                  ) : (
+                    <DirectFreezeFrameController
+                      apiData={buildUpRawData}
+                      onFrameUpdate={handleFrameUpdate}
+                      onPassDraw={handlePassDraw}
+                    />
+                  )}
+                  
                   <button
                     onClick={closePassAnimation}
                     style={{

@@ -2,10 +2,10 @@
    GENEL DEĞİŞKENLER & RESET
    ======================================== */
 :root {
-    --primary-color: #2c3e50;
-    --accent-color: #6c5ce7;
-    --secondary-color: #a29bfe;
-    --success-color: #00b894;
+    --primary-color: #302F2B;
+    --accent-color: #ABD0C6;
+    --secondary-color: #8fb9ad;
+    --success-color: #ABD0C6;
     --danger-color: #e74c3c;
     --warning-color: #f39c12;
     --background: #f8f9fa;
@@ -129,10 +129,11 @@
     overflow: hidden;
     position: relative;
     margin: 1.5rem 0;
-    border: 2px solid #003300;
+    border: 3px solid #ABD0C6;
     height: auto;
     min-height: 0;
     max-height: none;
+    box-shadow: 0 4px 20px rgba(171, 208, 198, 0.3);
 }
 
 /* ========================================
@@ -264,7 +265,7 @@
 
 .player-number {
     background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
-    color: white;
+    color: var(--primary-color);
     min-width: 1.8rem;
     height: 1.8rem;
     border-radius: 6px;
@@ -274,7 +275,7 @@
     font-weight: 700;
     font-size: 0.75rem;
     flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(108, 92, 231, 0.25);
+    box-shadow: 0 2px 6px rgba(171, 208, 198, 0.25);
 }
 
 .player-name {
@@ -374,7 +375,7 @@
 .section-header {
     font-size: 0.85rem;
     font-weight: 700;
-    color: white;
+    color: var(--primary-color);
     background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
     padding: 0.5rem 0.75rem;
     border-radius: 8px;

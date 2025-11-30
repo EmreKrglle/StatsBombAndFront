@@ -2,11 +2,11 @@
 
 /* 1. Renk Paletiniz ve Değişkenleriniz (Tüm projede geçerli) */
 :root {
-    --primary-color: #282828e8;
-    --secondary-color: #4a6b5f;
-    --accent-color: #5a7d6f;
-    --success-color: #6b8e7d;
-    --background: #282828e8;
+    --primary-color: #302F2B;
+    --secondary-color: #8fb9ad;
+    --accent-color: #ABD0C6;
+    --success-color: #ABD0C6;
+    --background: #302F2B;
     --home:#a61100;
     --away:#002397;
     --card-shadow: 0 8px 32px rgba(0,0,0,0.08);
@@ -76,7 +76,7 @@ body {
 }
 
 .loading-text {
-    color: white;
+    color: #ABD0C6;
     font-size: 1.1rem;
     font-weight: 500;
 }

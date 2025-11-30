@@ -1,11 +1,172 @@
-// FormationPitch.jsx - Pass animasyonu destekli versiyon
-import React, { useState, useEffect } from 'react';
+// FormationPitch.jsx - Smooth animations with improved design
+import React, { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Arrow } from 'react-konva';
 import { getPositionCoordinates } from '../utils/formationMap';
+import Konva from 'konva';
 
 const ABSTRACT_WIDTH = 120;
 const ABSTRACT_HEIGHT = 80;
 
+// Smooth transition ile oyuncu componenti
+const AnimatedPlayer = ({ targetX, targetY, color, isActor, isKeeper, label, jerseyNumber }) => {
+  const circleRef = useRef();
+  const textRef = useRef();
+  const numberRef = useRef();
+  
+  // İlk pozisyonu kaydet
+  const [isFirstRender, setIsFirstRender] = useState(true);
+
+  useEffect(() => {
+    if (!circleRef.current) return;
+
+    // İlk render'da direkt konumla
+    if (isFirstRender) {
+      circleRef.current.x(targetX);
+      circleRef.current.y(targetY);
+      if (textRef.current) {
+        textRef.current.x(targetX - 10);
+        textRef.current.y(targetY - 6);
+      }
+      if (numberRef.current) {
+        numberRef.current.x(targetX - 6);
+        numberRef.current.y(targetY - 7);
+      }
+      setIsFirstRender(false);
+      return;
+    }
+
+    // Sonraki render'larda smooth transition
+    const tween = new Konva.Tween({
+      node: circleRef.current,
+      duration: 0.8,
+      x: targetX,
+      y: targetY,
+      easing: Konva.Easings.EaseInOut,
+    });
+    tween.play();
+
+    // GK text animasyonu
+    if (textRef.current && isKeeper) {
+      new Konva.Tween({
+        node: textRef.current,
+        duration: 0.8,
+        x: targetX - 10,
+        y: targetY - 6,
+        easing: Konva.Easings.EaseInOut,
+      }).play();
+    }
+
+    // Jersey number animasyonu
+    if (numberRef.current && !isKeeper) {
+      new Konva.Tween({
+        node: numberRef.current,
+        duration: 0.8,
+        x: targetX - 6,
+        y: targetY - 7,
+        easing: Konva.Easings.EaseInOut,
+      }).play();
+    }
+
+    return () => tween.destroy();
+  }, [targetX, targetY]);
+
+  return (
+    <>
+      <Circle
+        ref={circleRef}
+        x={0}
+        y={0}
+        radius={isKeeper ? 24 : (isActor ? 22 : 20)}
+        fill={color}
+        stroke={isActor ? '#ABD0C6' : 'white'}
+        strokeWidth={isActor ? 3 : 2}
+        shadowBlur={isActor ? 10 : 5}
+        shadowColor={isActor ? '#ABD0C6' : 'black'}
+        listening={false}
+        perfectDrawEnabled={false}
+        shadowForStrokeEnabled={false}
+      />
+      {isKeeper && (
+        <Text
+          ref={textRef}
+          text="GK"
+          x={0}
+          y={0}
+          fontSize={10}
+          fill="white"
+          fontStyle="bold"
+          listening={false}
+          perfectDrawEnabled={false}
+        />
+      )}
+      {!isKeeper && jerseyNumber && (
+        <Text
+          ref={numberRef}
+          text={jerseyNumber.toString()}
+          x={0}
+          y={0}
+          fontSize={12}
+          fill="white"
+          fontStyle="bold"
+          listening={false}
+          perfectDrawEnabled={false}
+        />
+      )}
+      {isActor && (
+        <Circle
+          x={targetX}
+          y={targetY}
+          radius={30}
+          stroke="#ABD0C6"
+          strokeWidth={2}
+          opacity={0.5}
+          listening={false}
+          perfectDrawEnabled={false}
+          dash={[5, 5]}
+        />
+      )}
+    </>
+  );
+};
+
+// Geliştirilmiş pass oku
+const PassArrow = ({ from, to }) => {
+  return (
+    <Arrow
+      points={[from.x, from.y, to.x, to.y]}
+      stroke="#ABD0C6"
+      strokeWidth={3}
+      fill="#ABD0C6"
+      pointerLength={10}
+      pointerWidth={10}
+      opacity={0.8}
+      shadowColor="black"
+      shadowBlur={5}
+      shadowOpacity={0.5}
+      listening={false}
+      perfectDrawEnabled={false}
+    />
+  );
+};
+
+// Carry (taşıma) animasyonu için trail effect
+const CarryTrail = ({ path }) => {
+  if (!path || path.length < 2) return null;
+  
+  return (
+    <Line
+      points={path.flatMap(p => [p.x, p.y])}
+      stroke="#ABD0C6"
+      strokeWidth={2}
+      opacity={0.4}
+      dash={[5, 5]}
+      listening={false}
+      perfectDrawEnabled={false}
+    />
+  );
+};
+
+// Normal oyuncu marker (freeze frame olmadığında)
 const PlayerMarker = ({ 
   player, 
   teamType, 
@@ -14,21 +175,18 @@ const PlayerMarker = ({
   pitchHeight, 
   formationName, 
   isActive,
-  animatedPosition // Animasyon için dışarıdan gelen pozisyon
+  animatedPosition 
 }) => {
   const posName = player.positions[0]?.position;
   let abstractPos = getPositionCoordinates(formationName, posName);
-  
   const initialX = teamType === 'home'
     ? (abstractPos.x / ABSTRACT_WIDTH) * pitchWidth
     : ((ABSTRACT_WIDTH - abstractPos.x) / ABSTRACT_WIDTH) * pitchWidth;
 
   const initialY = ((ABSTRACT_HEIGHT - abstractPos.y) / ABSTRACT_HEIGHT) * pitchHeight;
-  
   const [pixel, setpixel] = useState({ pixelX: initialX, pixelY: initialY });
-  const nodeRef = React.useRef();
+  const nodeRef = useRef();
 
-  // Animasyonlu pozisyon güncellemesi
   useEffect(() => {
     if (animatedPosition) {
       const newX = teamType === 'home'
@@ -51,9 +209,7 @@ const PlayerMarker = ({
   const getShortName = (fullName) => {
     const parts = fullName.trim().split(' ');
     if (parts.length === 1) return parts[0];
-    const firstName = parts[0];
-    const lastName = parts[parts.length - 1];
-    return `${firstName.charAt(0)}. ${lastName}`;
+    return `${parts[0].charAt(0)}. ${parts[parts.length - 1]}`;
   };
 
   return (
@@ -64,13 +220,13 @@ const PlayerMarker = ({
         y={pixel.pixelY}
         radius={isActive ? 22 : 20}
         fill={teamType === 'home' ? "#e74c3c" : '#3498db'}
-        stroke={isActive ? '#05d26fda' : 'white'}
+        stroke={isActive ? '#ABD0C6' : 'white'}
         strokeWidth={isActive ? 3 : 2}
         shadowBlur={isActive ? 8 : 5}
         onClick={() => onPlayerClick(player.player_id, player.player_name)}
         onTap={() => onPlayerClick(player.player_id, player.player_name)}
         draggable={true}
-        onDragMove={handleDragEnd}
+        onDragEnd={handleDragEnd}
         perfectDrawEnabled={false}
         shadowForStrokeEnabled={false}
       />
@@ -107,26 +263,7 @@ const PlayerMarker = ({
   );
 };
 
-// Pass ok çizgisi componenti
-const PassArrow = ({ from, to, color = '#f1c40f', opacity = 0.8 }) => {
-  return (
-    <Arrow
-      points={[from.x, from.y, to.x, to.y]}
-      stroke={color}
-      strokeWidth={3}
-      fill={color}
-      pointerLength={10}
-      pointerWidth={10}
-      opacity={opacity}
-      shadowColor="black"
-      shadowBlur={5}
-      shadowOpacity={0.5}
-      listening={false}
-      perfectDrawEnabled={false}
-    />
-  );
-};
-
+// Ana component
 const FormationPitch = ({ 
   homePlayers, 
   awayPlayers, 
@@ -134,22 +271,17 @@ const FormationPitch = ({
   awayFormation, 
   onPlayerClick, 
   activePlayer,
-  animatedPositions = {}, // { freeze_0: {x, y}, freeze_1: {x, y}, ... } veya { playerId: {x, y} }
-  passArrows = [] // [{ from: {x, y}, to: {x, y} }]
+  animatedPositions = {},
+  passArrows = [],
+  carryPaths = [] // Yeni: carry trail'leri için
 }) => {
-  const containerRef = React.useRef(null);
-  const [size, setSize] = React.useState({ width: 0, height: 0 });
+  const containerRef = useRef(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
 
   // Freeze frame pozisyonları var mı kontrol et
   const hasFreezeFramePositions = Object.keys(animatedPositions).some(key => key.startsWith('freeze_'));
 
-  console.log('🎨 FormationPitch render:', {
-    animatedPositionsCount: Object.keys(animatedPositions).length,
-    hasFreezeFrame: hasFreezeFramePositions,
-    firstKey: Object.keys(animatedPositions)[0]
-  });
-
-  React.useEffect(() => {
+  useEffect(() => {
     const checkSize = () => {
       if (containerRef.current) {
         const width = containerRef.current.offsetWidth;
@@ -168,15 +300,12 @@ const FormationPitch = ({
     };
   }, []);
 
-// Pozisyonları pixel koordinatlarına çevir
+  // Pozisyonları pixel koordinatlarına çevir
   const convertToPixels = (abstractPos) => {
     const x = (abstractPos.x / ABSTRACT_WIDTH) * size.width;
     const y = ((ABSTRACT_HEIGHT - abstractPos.y) / ABSTRACT_HEIGHT) * size.height;
     return { x, y };
   };
-
-  const ABSTRACT_WIDTH = 120;
-  const ABSTRACT_HEIGHT = 80;
 
   if (size.width === 0 || size.height === 0) {
     return (
@@ -184,7 +313,7 @@ const FormationPitch = ({
         <div style={{ 
           width: '100%', 
           paddingBottom: '66.67%', 
-          background: '#1a7d3e',
+          background: '#302F2B',
           position: 'relative',
           borderRadius: '8px',
         }}>
@@ -193,7 +322,7 @@ const FormationPitch = ({
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
-            color: 'rgba(255,255,255,0.3)',
+            color: '#ABD0C6',
             fontSize: '14px'
           }}>
             Saha yükleniyor...
@@ -208,12 +337,12 @@ const FormationPitch = ({
       <Stage width={size.width} height={size.height}>
         <Layer listening={true}>
           {/* Saha zemini */}
-          <Rect width={size.width} height={size.height} fill="#1a7d3e" />
+          <Rect width={size.width} height={size.height} fill="#302F2B" />
           
           {/* Orta çizgi */}
           <Line 
             points={[size.width / 2, 0, size.width / 2, size.height]} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
@@ -221,13 +350,13 @@ const FormationPitch = ({
           {/* Üst ve alt çizgiler */}
           <Line 
             points={[0, 2, size.width, 2]} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
           <Line 
             points={[0, size.height - 2, size.width, size.height - 2]} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
@@ -237,7 +366,7 @@ const FormationPitch = ({
             x={size.width / 2} 
             y={size.height / 2} 
             radius={size.width * 0.08} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
@@ -248,7 +377,7 @@ const FormationPitch = ({
             y={size.height * 0.225} 
             width={size.width * 0.15} 
             height={size.height * 0.55} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
@@ -259,12 +388,17 @@ const FormationPitch = ({
             y={size.height * 0.225} 
             width={size.width * 0.15} 
             height={size.height * 0.55} 
-            stroke="white" 
+            stroke="#ABD0C6" 
             strokeWidth={2} 
             opacity={0.6} 
           />
           
-          {/* Pass okları - Oyuncuların altında */}
+          {/* Carry trail'leri */}
+          {carryPaths.map((path, idx) => (
+            <CarryTrail key={`carry-${idx}`} path={path.map(convertToPixels)} />
+          ))}
+          
+          {/* Pass okları */}
           {passArrows.map((arrow, idx) => {
             const fromPixel = convertToPixels(arrow.from);
             const toPixel = convertToPixels(arrow.to);
@@ -287,37 +421,18 @@ const FormationPitch = ({
               const pixelY = ((ABSTRACT_HEIGHT - pos.y) / ABSTRACT_HEIGHT) * size.height;
               
               // Takım rengini belirle
-              const color = pos.teammate ? '#e74c3c' : '#3498db'; // Kırmızı: takım, Mavi: rakip
-              const borderColor = pos.actor ? '#05d26fda' : 'white';
-              const borderWidth = pos.actor ? 3 : 2;
+              const color = pos.teammate ? '#e74c3c' : '#3498db';
               
               return (
-                <React.Fragment key={key}>
-                  <Circle
-                    x={pixelX}
-                    y={pixelY}
-                    radius={pos.keeper ? 12 : 10}
-                    fill={color}
-                    stroke={borderColor}
-                    strokeWidth={borderWidth}
-                    shadowBlur={5}
-                    listening={false}
-                    perfectDrawEnabled={false}
-                    shadowForStrokeEnabled={false}
-                  />
-                  {pos.keeper && (
-                    <Text
-                      text="GK"
-                      x={pixelX - 10}
-                      y={pixelY - 6}
-                      fontSize={10}
-                      fill="white"
-                      fontStyle="bold"
-                      listening={false}
-                      perfectDrawEnabled={false}
-                    />
-                  )}
-                </React.Fragment>
+                <AnimatedPlayer
+                  key={key}
+                  targetX={pixelX}
+                  targetY={pixelY}
+                  color={color}
+                  isActor={pos.actor}
+                  isKeeper={pos.keeper}
+                  jerseyNumber={null}
+                />
               );
             })
           ) : (
